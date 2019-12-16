@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <style>
+      body {
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        --lumo-size-m: 5rem;
+        --lumo-font-size-m: 3rem;
+      }
+      #preview {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #cam-canvas {
+        width: 100%;
+      }
+
+      #content .layout {
+        border: 2px solid gray;
+      }
+
+      #content {
+        display: flex;
+      }
+
+      #content > div {
+        height: 100vh;
+        width: 100vw;
+      }
+
+      button {
+        width: 100vw;
+        font-size: 4vh;
+        flex-grow: 1;
+        flex-basis: auto;
+      }
+
+      img {
+        border-radius: 1rem;
+      }
+    </style>
+
+    <script
+      src="./node_modules/@vaadin/vaadin-lumo-styles/color.js"
+      type="module"
+    ></script>
+    <script
+      src="./node_modules/@vaadin/vaadin-lumo-styles/sizing.js"
+      type="module"
+    ></script>
+    <script
+      src="./node_modules/@vaadin/vaadin-lumo-styles/spacing.js"
+      type="module"
+    ></script>
+    <script
+      src="./node_modules/@vaadin/vaadin-lumo-styles/style.js"
+      type="module"
+    ></script>
+    <script
+      src="./node_modules/@vaadin/vaadin-lumo-styles/typography.js"
+      type="module"
+    ></script>
+
+    <custom-style>
+      <style include="lumo-color lumo-typography"></style>
+    </custom-style>
+
+    <script src="./node_modules/tesseract.js/dist/tesseract.js"></script>
+    <script src="./node_modules/jszip/dist/jszip.js"></script>
+    <script src="./node_modules/file-saver/dist/FileSaver.js"></script>
+  </head>
+  <body>
+    <video autoplay style="display:none" width="640" height="480"></video>
+    <canvas id="cam-canvas"></canvas>
+    <button id="reset">Generate view</button>
+    <button id="share">Share</button>
+    <div theme="dark" id="content"></div>
+    <canvas id="result-image" width="640" height="480"></canvas>
+    <script src="bundle.js"></script>
+  </body>
+</html>

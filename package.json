@@ -1,0 +1,30 @@
+{
+  "name": "napkin",
+  "version": "0.0.1",
+  "description": "Draw UIs on a napkin, turn them into real UIs using your phone",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "dev": "npm-run-all --parallel start watch",
+    "start": "serve public --ssl-cert ./cert.pem --ssl-key ./key.pem"
+  },
+  "author": "Matti Vesa",
+  "license": "MIT",
+  "dependencies": {
+    "@vaadin/vaadin-core": "^13.0.1",
+    "@vaadin/vaadin-grid": "^5.3.3",
+    "@vaadin/vaadin-tabs": "^2.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.3",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.16.2",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-css-only": "^1.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-resolve": "^5.1.0",
+    "rollup-plugin-terser": "^5.0.0",
+    "serve": "^11.0.2"
+  }
+}
