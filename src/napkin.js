@@ -965,67 +965,84 @@ const enterSketchMode = (targetEl, designCallback) => {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     ctx.drawImage(video, 0, 0);
-    const imageData = ctx.getImageData(0, 0, 640, 640);
-    let [xs, ys, prepared] = prepare(imageData.data);
-    //draw_image(prepared, document.getElementById("result-image"));
-    const newRects = collect_rects(xs, ys, prepared);
-    rects = filter_rects(newRects, rects);
-    image = prepared;
-    draw_rects(rects);
-    deleteRectChildren(rects);
-    if (rectangleSynthesisRunning) {
+    if (!rectangleSynthesisRunning) {
+      const imageData = ctx.getImageData(0, 0, 640, 640);
+      let [xs, ys, prepared] = prepare(imageData.data);
+      //draw_image(prepared, document.getElementById("result-image"));
+      const newRects = collect_rects(xs, ys, prepared);
+      rects = filter_rects(newRects, rects);
+      image = prepared;
+      draw_rects(rects);
+      deleteRectChildren(rects);
+    } else {
       window.requestAnimationFrame(update_view);
     }
   };
 
   window.requestAnimationFrame(update_view);
 
-  function handleSuccess(stream) {
-    video.srcObject = stream;
-  }
+  let currentStream;
 
-  /*
-navigator.mediaDevices.enumerateDevices()
-.then(function(devices) {
-  devices.forEach(function(device) {
-    console.log(device.kind + ": " + device.label +
-                " id = " + device.deviceId);
-  });
-})
-.catch(function(err) {
-  console.log(err.name + ": " + err.message);
-});
-*/
-  let daDeviceId = "";
-  navigator.mediaDevices.enumerateDevices().then(devices => {
-    devices.forEach(device => {
-      console.log(
-        device.kind + ": " + device.label + " id = " + device.deviceId
-      );
-
-      if (device.kind === "videoinput") {
-        daDeviceId = device.deviceId;
-      }
-    });
-
+  const chooseDevice = id => {
+    if (currentStream) {
+      currentStream.getVideoTracks().forEach(track => {
+        track.stop();
+      });
+    }
     const constraints = {
       video: {
         width: { exact: 640 },
         height: { exact: 480 },
-        deviceId: daDeviceId
-        /*"f18502a9af78d822e3030dfc2c3fb285bb28198352290c39c240d43222d33569"*/
+        deviceId: id
       }
     };
     navigator.mediaDevices
       .getUserMedia(constraints)
-      .then(handleSuccess)
+      .then(stream => {
+        currentStream = stream;
+        video.srcObject = stream;
+      })
       .catch(error => console.log(error));
+  };
+
+  const deviceList = document.getElementById("device-list");
+
+  navigator.mediaDevices.enumerateDevices().then(devices => {
+    let firstDevice = null;
+    devices.forEach(device => {
+      if (device.kind === "videoinput") {
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "device";
+        input.value = device.deviceId;
+        input.onclick = event => {
+          const id = event.target.value;
+          console.log("choosing " + id);
+          chooseDevice(id);
+        };
+        deviceList.appendChild(input);
+
+        const label = document.createElement("label");
+        label.for = device.id;
+        label.textContent = device.label;
+        deviceList.appendChild(label);
+        if (!firstDevice) {
+          firstDevice = input;
+        }
+      }
+    });
+    firstDevice.checked = true;
+    chooseDevice(firstDevice.value);
   });
 
   $("#cam-canvas").onclick = () => {
-    rectangleSynthesisRunning = true;
-    rects = [];
-    window.requestAnimationFrame(update_view);
+    if (rectangleSynthesisRunning) {
+      rectangleSynthesisRunning = false;
+    } else {
+      rectangleSynthesisRunning = true;
+      rects = [];
+      window.requestAnimationFrame(update_view);
+    }
   };
 
   $("#reset").onclick = () => {

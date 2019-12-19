@@ -13,11 +13,6 @@
         display: flex;
         flex-direction: column;
         justify-content: space-evenly;
-        /*
-        --lumo-size-m: 5rem;
-        --lumo-font-size-m: 3rem;
-        --lumo-font-size-s: 2rem;
-        font-size: 3rem;*/
       }
       #preview {
         width: 100vw;
@@ -59,11 +54,13 @@
   </head>
   <body>
     <video autoplay style="display:none" width="640" height="640"></video>
+    <div id="device-list">
+    </div>
     <canvas id="cam-canvas"></canvas>
     <button id="reset">Generate view</button>
     <button id="share-button">Share</button>
     <div theme="dark" id="content"></div>
-    <canvas id="result-image" width="640" height="640"></canvas>
+<!--    <canvas id="result-image" width="640" height="640"></canvas> -->
     <script src="bundle.js"></script>
   </body>
 </html>
