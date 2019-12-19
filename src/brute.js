@@ -1,6 +1,5 @@
 const flexboxProps = [
   ["flex-direction", ["row", "row-reverse", "column", "column-reverse"]],
-  ["flex-wrap", ["nowrap", "wrap", "wrap-reverse"]],
   [
     "justify-content",
     [
@@ -37,9 +36,6 @@ const flexboxProps = [
       "inherit"
     ]
   ]
-  //,
-  //["width", ["auto", "100%", "75%", "25%"]],
-  //["height", ["auto", "100%", "75%", "25%"]]
 ];
 
 const get_pos = (parentEl, el) => {
@@ -52,16 +48,15 @@ const get_pos = (parentEl, el) => {
 };
 
 const calc_distance = (p1, p2) => {
-  return Math.sqrt(
+  return (
     (p1.left - p2.left) * (p1.left - p2.left) +
-      (p1.top - p2.top) * (p1.top - p2.top) +
-      (p1.width - p2.width) * (p1.width - p2.width) +
-      (p1.height - p2.height) * (p1.height - p2.height)
+    (p1.top - p2.top) * (p1.top - p2.top) +
+    (p1.width - p2.width) * (p1.width - p2.width) +
+    (p1.height - p2.height) * (p1.height - p2.height)
   );
 };
 
 export const brute = (rects, parent) => {
-  console.log("So many rects " + rects.length);
   const flex_container = document.createElement("div");
   flex_container.style.display = "flex";
   flex_container.style.width = parent.right - parent.left + "px";
@@ -80,10 +75,6 @@ export const brute = (rects, parent) => {
     positions.push(pos);
     const el = document.createElement("div");
     el.style.overflow = "hidden";
-    el.style.margin = "10px";
-    //el.style.minWidth = "30px"; //rect.right - rect.left + "px";
-    //el.style.minHeight = "30px";
-    // rect.bottom - rect.top + "px";
     el.style.backgroundColor = "blue";
     el.textContent = "Rect";
     flex_container.appendChild(el);
@@ -99,10 +90,10 @@ export const brute = (rects, parent) => {
 
   let running = true;
   let rounds = 0;
-  let best;
-  let best_distance = 100000;
+  let best = indexes.slice;
+  let best_distance = 10000000;
   do {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < flexboxProps.length; i++) {
       flex_container.style[flexboxProps[i][0]] = flexboxProps[i][1][indexes[i]];
     }
 
@@ -140,34 +131,36 @@ export const brute = (rects, parent) => {
     rounds++;
   } while (running);
 
-  let css_props = {};
+  let css_props = "display: flex;";
 
   for (let i = 0; i < flexboxProps.length; i++) {
     flex_container.style[flexboxProps[i][0]] = flexboxProps[i][1][best[i]];
-    css_props[flexboxProps[i][0]] = flexboxProps[i][1][best[i]];
+    css_props =
+      css_props +
+      [flexboxProps[i][0]] +
+      ": " +
+      flexboxProps[i][1][best[i]] +
+      ";";
   }
-  css_props.display = "flex";
-  css_props.border = "1px solid black";
-  //css_props.width = flex_container.style.width;
-  //css_props.height = flex_container.style.height;
-  //css_props.flexGrow = "1";
 
   const flexItemProps = [
-    { flexGrow: 1, flexShrink: 0, flexBasis: "auto" },
-    { flexGrow: 0, flexShrink: 1, flexBasis: "auto" },
-    { flexGrow: 0, flexShrink: 0, flexBasis: 0 }
+    { "flex-grow": 1, "flex-shrink": 0, "flex-basis": "auto" },
+    { "flex-grow": 0, "flex-shrink": 1, "flex-basis": "auto" },
+    { "flex-grow": 0, "flex-shrink": 0, "flex-basis": 0 }
   ];
 
-  const words = ["grow", "shrink", "static"];
+  const flexItemPropStrings = [
+    "flex: 1 0 auto;",
+    "flex: 0 1 auto;",
+    "flex: 0 0 0;"
+  ];
 
   best_distance = 1000000;
   let best_item_props = 0;
   for (let rectI = 0; rectI < Math.pow(3, rects.length); rectI++) {
     let index = rectI;
-    console.log("combo is: ");
     for (let j = 0; j < rects.length; j++) {
       Object.assign(flexblocks[j].style, flexItemProps[index % 3]);
-      console.log(words[index % 3]);
       index = (index / 3) | 0;
     }
 
@@ -181,23 +174,19 @@ export const brute = (rects, parent) => {
       distance += calc_distance(fpositions[i], positions[i]);
     }
 
-    console.log("distance is " + distance);
-
     if (distance < best_distance) {
       best_item_props = rectI;
       best_distance = distance;
-      console.log("best item distance " + distance);
     }
   }
 
   let index = best_item_props;
   for (let j = 0; j < rects.length; j++) {
-    rects[j].css_props = flexItemProps[index % 3];
+    rects[j].css_props = flexItemPropStrings[index % 3];
     index = (index / 3) | 0;
-    console.log("applying " + j);
   }
 
-  //document.body.removeChild(flex_container);
+  document.body.removeChild(flex_container);
 
   return css_props;
 };

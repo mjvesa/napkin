@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title></title>
+    <title>Napkin</title>
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    ></meta>
     <style>
       body {
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
         justify-content: space-evenly;
+        /*
         --lumo-size-m: 5rem;
         --lumo-font-size-m: 3rem;
+        --lumo-font-size-s: 2rem;
+        font-size: 3rem;*/
       }
       #preview {
         width: 100vw;
@@ -35,7 +43,7 @@
 
       button {
         width: 100vw;
-        font-size: 4vh;
+        font-size: 3vh;
         flex-grow: 1;
         flex-basis: auto;
       }
@@ -45,42 +53,17 @@
       }
     </style>
 
-    <script
-      src="./node_modules/@vaadin/vaadin-lumo-styles/color.js"
-      type="module"
-    ></script>
-    <script
-      src="./node_modules/@vaadin/vaadin-lumo-styles/sizing.js"
-      type="module"
-    ></script>
-    <script
-      src="./node_modules/@vaadin/vaadin-lumo-styles/spacing.js"
-      type="module"
-    ></script>
-    <script
-      src="./node_modules/@vaadin/vaadin-lumo-styles/style.js"
-      type="module"
-    ></script>
-    <script
-      src="./node_modules/@vaadin/vaadin-lumo-styles/typography.js"
-      type="module"
-    ></script>
-
     <custom-style>
       <style include="lumo-color lumo-typography"></style>
     </custom-style>
-
-    <script src="./node_modules/tesseract.js/dist/tesseract.js"></script>
-    <script src="./node_modules/jszip/dist/jszip.js"></script>
-    <script src="./node_modules/file-saver/dist/FileSaver.js"></script>
   </head>
   <body>
-    <video autoplay style="display:none" width="640" height="480"></video>
+    <video autoplay style="display:none" width="640" height="640"></video>
     <canvas id="cam-canvas"></canvas>
     <button id="reset">Generate view</button>
-    <button id="share">Share</button>
+    <button id="share-button">Share</button>
     <div theme="dark" id="content"></div>
-    <canvas id="result-image" width="640" height="480"></canvas>
+    <canvas id="result-image" width="640" height="640"></canvas>
     <script src="bundle.js"></script>
   </body>
 </html>

@@ -3,20 +3,10 @@ import "@vaadin/vaadin-checkbox";
 import "@vaadin/vaadin-checkbox/theme/lumo/vaadin-checkbox-group.js";
 import "@vaadin/vaadin-radio-button";
 import "@vaadin/vaadin-radio-button/theme/lumo/vaadin-radio-group.js";
-import "@vaadin/vaadin-select";
 import "@vaadin/vaadin-item";
 import "@vaadin/vaadin-icons";
 import "@vaadin/vaadin-combo-box";
-import "@vaadin/vaadin-date-picker";
-import "@vaadin/vaadin-time-picker";
-import "@vaadin/vaadin-grid";
 import "@vaadin/vaadin-text-field";
-import "@vaadin/vaadin-text-field/theme/lumo/vaadin-email-field.js";
-import "@vaadin/vaadin-text-field/theme/lumo/vaadin-number-field.js";
-import "@vaadin/vaadin-text-field/theme/lumo/vaadin-password-field.js";
-import "@vaadin/vaadin-ordered-layout/theme/lumo/vaadin-horizontal-layout.js";
-import "@vaadin/vaadin-ordered-layout/theme/lumo/vaadin-vertical-layout.js";
-import "@vaadin/vaadin-split-layout/theme/lumo/vaadin-split-layout.js";
 import "@vaadin/vaadin-tabs/theme/lumo/vaadin-tabs.js";
 import "@vaadin/vaadin-tabs/theme/lumo/vaadin-tab.js";
 
@@ -30,6 +20,7 @@ import { brute } from "./brute";
 
 let $ = document.querySelector.bind(document);
 
+// Take long runs of white and squeeze them into one.
 const thin_mono = arr => {
   let result = [];
   let begin_x = -1;
@@ -47,7 +38,7 @@ const thin_mono = arr => {
 
 const scan_horizontal_edge_no_gaps = (y, x1, x2, image, gapLimit) => {
   let i = y * 640;
-  let x = x1; // + (((x2 - x1) * Math.random()) | 0);
+  let x = x1; //((x2 - x1) * Math.random()) | 0;
   while (image[i + x] === 0 && x <= x2) {
     x++;
   }
@@ -114,7 +105,7 @@ const scan_horizontal_edge_no_gaps = (y, x1, x2, image, gapLimit) => {
 
 const scan_vertical_edge_no_gaps = (x, y1, y2, image, gapLimit) => {
   let i = x;
-  let y = y1; // + (((y2 - y1) * Math.random()) | 0);
+  let y = y1; //((y2 - y1) * Math.random()) | 0;
   while (image[i + y * 640] === 0 && y <= y2) {
     y++;
   }
@@ -184,7 +175,7 @@ const find_vertical_edges = image => {
   for (let x = 0; x < 640; x++) {
     let i = x;
     let acc = 0;
-    for (let y = 0; y < 480; y++) {
+    for (let y = 0; y < 640; y++) {
       if (image[i]) {
         acc += image[i];
       }
@@ -209,7 +200,7 @@ const find_vertical_edges = image => {
 
 const find_horizontal_edges = image => {
   let edges = [];
-  for (let y = 0; y < 480; y++) {
+  for (let y = 0; y < 640; y++) {
     let i = y * 640;
     let acc = 0;
     for (let x = 0; x < 640; x++) {
@@ -220,8 +211,8 @@ const find_horizontal_edges = image => {
   }
   let diffs = [];
   diffs[0] = 0;
-  diffs[479] = 0;
-  for (let i = 1; i < 479; i++) {
+  diffs[639] = 0;
+  for (let i = 1; i < 639; i++) {
     let diff = Math.abs(edges[i - 1] - edges[i + 1]);
     if (diff > 16) {
       diff = 255;
@@ -236,7 +227,7 @@ const find_horizontal_edges = image => {
 const blur = arr => {
   const blurred = [];
   let i = 640;
-  for (let y = 1; y < 480 - 1; y++) {
+  for (let y = 1; y < 640 - 1; y++) {
     for (let x = 1; x < 640 - 1; x++) {
       blurred[i] =
         ((arr[i - 1] + arr[i + 1] + arr[i - 640] + arr[i + 640]) / 4) | 0;
@@ -245,32 +236,6 @@ const blur = arr => {
     i += 2;
   }
   return blurred;
-};
-
-const sparse = arr => {
-  let i, j;
-  let result = [];
-  let source = arr;
-  for (let outer = 0; outer < 2; outer++) {
-    for (i = 0; i < arr.length; i++) {
-      result[i] = 0;
-    }
-    for (i = outer * 8; i < source.length; i += 16) {
-      let acc = 0;
-      let count = 0;
-      for (j = 0; j < 16; j++) {
-        if (source[j + i] > 0) {
-          count++;
-          acc += j;
-        }
-      }
-      if (count > 0) {
-        result[i + acc / count] = 255;
-      }
-    }
-    source = result.slice();
-  }
-  return result;
 };
 
 // get a picture with defined edges and a map of vertical and horizontal lines
@@ -284,9 +249,14 @@ const prepare = canvas_pixels => {
   let xs = [];
 
   // Convert into grayscale
-  for (y = 0; y < 480; y++) {
+  for (y = 0; y < 640; y++) {
     for (x = 0; x < 640; x++) {
-      a = 255 - (canvas_pixels[i * 4] + canvas_pixels[i * 4 + 1]) / 2;
+      a =
+        255 -
+        (canvas_pixels[i * 4] +
+          canvas_pixels[i * 4 + 1] +
+          canvas_pixels[i * 4 + 1]) /
+          3;
       prepared[i] = a;
       i++;
     }
@@ -302,7 +272,7 @@ const prepare = canvas_pixels => {
   min = 255;
   let sharpened = [];
   i = 640;
-  for (y = 1; y < 480 - 1; y++) {
+  for (y = 1; y < 640 - 1; y++) {
     for (x = 1; x < 640 - 1; x++) {
       let diff =
         Math.abs(prepared[i] - prepared[i + 1]) +
@@ -335,14 +305,14 @@ const prepare = canvas_pixels => {
 
   sharpened = blur(sharpened);
   sharpened = blur(sharpened);
-  //sharpened = blur(sharpened);
+  ///sharpened = blur(sharpened);
   //sharpened = blur(sharpened);
 
   i = 0;
-  for (y = 0; y < 480; y++) {
+  for (y = 0; y < 640; y++) {
     for (x = 0; x < 640; x++) {
       a = (((sharpened[i] - min) * 255) / (max - min + 1)) | 0;
-      if (a > 20) {
+      if (a > 10) {
         a = 255;
       } else {
         a = 0;
@@ -354,9 +324,9 @@ const prepare = canvas_pixels => {
   prepared = sharpened;
 
   const erode = image => {
-    const thinned = new Array(640 * 480).fill(0);
+    const thinned = new Array(640 * 640).fill(0);
     i = 640;
-    for (y = 1; y < 480 - 1; y++) {
+    for (y = 1; y < 640 - 1; y++) {
       for (x = 1; x < 640 - 1; x++) {
         let neighbors =
           /*
@@ -401,7 +371,7 @@ const prepare = canvas_pixels => {
   ys = thin_mono(ys);
   /*
   i = 0;
-  for (y = 0; y < 480; y++) {
+  for (y = 0; y < 640; y++) {
     for (x = 0; x < 640; x++) {
       a = 0;
       // if (xs[x] > 64 || ys[y] > 64) {
@@ -410,6 +380,7 @@ const prepare = canvas_pixels => {
       prepared[i] += a;
       i++;
     }
+    
   }*/
   return [xs, ys, prepared];
 };
@@ -479,6 +450,39 @@ const collect_rects = (xs, ys, image) => {
   return rects;
 };
 
+const point_on_horizontal_edge = (x, y, x1, y1, x2, y2) => {
+  if (Math.abs(y - y1) < 4 && x >= x1 - 4 && x <= x2 + 4) {
+    return true;
+  }
+  return false;
+};
+
+const point_on_vertical_edge = (x, y, x1, y1, x2, y2) => {
+  if (Math.abs(x - x1) < 4 && y >= y1 - 4 && y <= y2 + 4) {
+    return true;
+  }
+  return false;
+};
+
+const point_on_rect = (x, y, rect) => {
+  if (
+    point_on_horizontal_edge(x, y, rect.left, rect.top, rect.right, rect.top) ||
+    point_on_horizontal_edge(
+      x,
+      y,
+      rect.left,
+      rect.bottom,
+      rect.right,
+      rect.bottom
+    ) ||
+    point_on_vertical_edge(x, y, rect.left, rect.top, rect.left, rect.bottom) ||
+    point_on_vertical_edge(x, y, rect.right, rect.top, rect.right, rect.bottom)
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const filter_rects = (rects, oldRects) => {
   const filtered = oldRects.slice();
   for (const rect of rects) {
@@ -496,8 +500,20 @@ const filter_rects = (rects, oldRects) => {
         (filteredMidX - midX) * (filteredMidX - midX) +
           (filteredMidY - midY) * (filteredMidY - midY) <
           1000 &&
-        Math.abs(filteredWidth - width) < 200 &&
-        Math.abs(filteredHeight - height) < 200
+        Math.abs(filteredWidth - width) < 50 &&
+        Math.abs(filteredHeight - height) < 50
+      ) {
+        newOne = false;
+        break;
+      }
+
+      // TODO check that no edges are shared, even partially.
+
+      if (
+        point_on_rect(rect.left, rect.top, filteredRect) ||
+        point_on_rect(rect.right, rect.top, filteredRect) ||
+        point_on_rect(rect.left, rect.bottom, filteredRect) ||
+        point_on_rect(rect.right, rect.bottom, filteredRect)
       ) {
         newOne = false;
         break;
@@ -514,11 +530,11 @@ const draw_image = (image, canvas) => {
   let x, y, i, j;
 
   const ctx = canvas.getContext("2d");
-  const imageData = ctx.getImageData(0, 0, 640, 480);
+  const imageData = ctx.getImageData(0, 0, 640, 640);
 
   i = 0;
   j = 0;
-  for (y = 0; y < 480; y++) {
+  for (y = 0; y < 640; y++) {
     for (x = 0; x < 640; x++) {
       let c = image[i];
       imageData.data[j] = c;
@@ -558,30 +574,21 @@ const isSquarish = rect => {
 };
 
 const isCheckBox = rect => {
-  // TODO checkbox is a box with half of it filled
-  const w = rect.right - rect.left;
-  const h = rect.bottom - rect.top;
-
   return (
     isSquarish(rect) &&
-    !rect.children &&
-    w < 30 &&
-    h < 30 &&
-    (!rect.text || rect.text.includes("x"))
+    rectCoverage(rect.left, rect.top, rect.right, rect.bottom, image) > 0.7
   );
 };
 
 const isRadioButton = rect => {
-  const w = rect.right - rect.left;
-  const h = rect.bottom - rect.top;
+  const left = rect.left + (rect.right - rect.left) * 0.3;
+  const top = rect.top + (rect.bottom - rect.top) * 0.3;
+  const right = rect.left + (rect.right - rect.left) * 0.6;
+  const bottom = rect.top + (rect.bottom - rect.top) * 0.6;
 
   return (
     isSquarish(rect) &&
-    !rect.children &&
-    w < 30 &&
-    h < 30 &&
-    rect.text &&
-    rect.text.includes("o")
+    rectCoverage(left | 0, top | 0, right | 0, bottom | 0, image) > 0.3
   );
 };
 
@@ -611,18 +618,57 @@ const isCheckBoxGroup = rect => {
   return result;
 };
 
-const isSpan = rect => {
-  // TODO span is filled with horizontal lines?
+const isTabs = rect => {
   const w = rect.right - rect.left;
   const h = rect.bottom - rect.top;
-  return w / h > 2 && h < 100 && rect.text && rect.text.includes("#");
+  const middleY = (rect.bottom + rect.top) / 2;
+  const oneThirdsX = rect.left + (rect.right - rect.left) * 0.3;
+  return (
+    w / h > 2 &&
+    line_coverage(rect.left, middleY, oneThirdsX, middleY, image) > 0.5
+  );
+};
+
+const isComboBox = rect => {
+  const w = rect.right - rect.left;
+  const h = rect.bottom - rect.top;
+  const middleY = (rect.bottom + rect.top) / 2;
+  const oneThirdsX = rect.left + (rect.right - rect.left) * 0.3;
+  const twoThirdsX = rect.left + (rect.right - rect.left) * 0.6;
+  return (
+    w / h > 2 &&
+    line_coverage(oneThirdsX, middleY, twoThirdsX, middleY, image) > 0.7
+  );
+};
+
+const isSpan = rect => {
+  const w = rect.right - rect.left;
+  const h = rect.bottom - rect.top;
+  const middleY = (rect.bottom + rect.top) / 2;
+  return (
+    w / h > 1.5 &&
+    line_coverage(rect.left, middleY, rect.right, middleY, image) > 0.7
+  );
+};
+
+const rectCoverage = (left, top, right, bottom, image) => {
+  const area = (right - left) * (bottom - top);
+  let acc = 0;
+  for (let y = top; y < bottom; y++) {
+    for (let x = left; x < right; x++) {
+      acc += image[x + y * 640] > 0 ? 1 : 0;
+    }
+  }
+  return acc / area;
 };
 
 const isButton = rect => {
-  // TODO button is filled with color
   const w = rect.right - rect.left;
   const h = rect.bottom - rect.top;
-  return w / h > 2 && w < 150 && h < 100 && !rect.children;
+  return (
+    w / h > 2 &&
+    rectCoverage(rect.left, rect.top, rect.right, rect.bottom, image) > 0.7
+  );
 };
 
 const isVerticalLayout = rect => {
@@ -671,15 +717,6 @@ const pointInsideRect = (rect, x, y) => {
   return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 };
 
-const rectsIntersect = (rectA, rectB) => {
-  return (
-    pointInsideRect(rectA, rectB.left, rectB.top) ||
-    pointInsideRect(rectA, rectB.right, rectB.top) ||
-    pointInsideRect(rectA, rectB.right, rectB.bottom) ||
-    pointInsideRect(rectA, rectB.left, rectB.bottom)
-  );
-};
-
 const getSmallestRect = rects => {
   let smallestArea = rectArea(rects[0]);
   let smallest = rects[0];
@@ -690,19 +727,6 @@ const getSmallestRect = rects => {
     }
   });
   return smallest;
-};
-
-const isSplitLayout = rect => {
-  if (!rect.children || rect.children.length !== 3) {
-    return false;
-  }
-
-  const smallest = getSmallestRect(rect.children);
-  const others = rect.children.filter(rect => rect !== smallest);
-
-  return (
-    rectsIntersect(others[0], smallest) && rectsIntersect(others[1], smallest)
-  );
 };
 
 const line_coverage = (x1, y1, x2, y2, image) => {
@@ -726,17 +750,20 @@ const line_coverage = (x1, y1, x2, y2, image) => {
 
 const isImage = rect => {
   return (
-    line_coverage(rect.left, rect.top, rect.right, rect.bottom, image) > 0.4 ||
+    line_coverage(rect.left, rect.top, rect.right, rect.bottom, image) > 0.4 &&
     line_coverage(rect.left, rect.bottom, rect.right, rect.top, image) > 0.4
   );
 };
 
 const heuristics = [
-  [isSpan, "span"],
-  [isButton, "vaadin-button"],
-  [isCheckBox, "vaadin-checkbox"],
   [isVerticalLayout, "div"],
   [isHorizontalLayout, "div"],
+  [isButton, "vaadin-button"],
+  [isSpan, "span"],
+  [isTabs, "vaadin-tabs"],
+  [isComboBox, "vaadin-combo-box"],
+  [isCheckBox, "vaadin-checkbox"],
+  [isRadioButton, "vaadin-radio-button"],
   [isImage, "img"]
 ];
 
@@ -791,49 +818,22 @@ const rectRatio = rect => {
   return w / h;
 };
 
-const createAndAppendChildElementsToDOM = (parent, rects, image) => {
-  let loremIndex = 0;
-  const getWord = () => {
-    loremIndex++;
-    return ipsumLorem[loremIndex];
+export const createAndAppendChildElements = rects => {
+  let tree = [];
+  const setAttribute = (name, value) => {
+    tree.push(name, value, "=");
   };
   rects.forEach(rect => {
+    const children = [];
+    let styles = "";
     let tagName = getTagForRect(rect);
-    if (tagName.includes("layout")) {
-      tagName = "div";
-    }
-    let el = document.createElement(tagName);
-    el.style.margin = "2rem";
+    tree.push(tagName);
+    tree.push("(");
     if (rect.css_props) {
-      Object.assign(el.style, rect.css_props);
-    }
-    /*  el.style.position = "absolute";
-    el.style.top = rect.top + "px";
-    el.style.left = rect.left + "px";*/
-    /*    if (tagName === "img") {
-      el.style.width = rect.right - rect.left + "px";
-      el.style.height = rect.bottom - rect.top + "px";
-    }*/
-
-    if (tagName === "div") {
-      el.className = "layout";
+      styles = rect.css_props;
     }
 
-    if (tagName === "img") {
-      el.setAttribute(
-        "src",
-        "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD//gATQ3JlYXRlZCB3aXRoIEdJTVD/4gKwSUNDX1BST0ZJTEUAAQEAAAKgbGNtcwQwAABtbnRyUkdCIFhZWiAH4wAMABAADgAcABJhY3NwQVBQTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLWxjbXMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1kZXNjAAABIAAAAEBjcHJ0AAABYAAAADZ3dHB0AAABmAAAABRjaGFkAAABrAAAACxyWFlaAAAB2AAAABRiWFlaAAAB7AAAABRnWFlaAAACAAAAABRyVFJDAAACFAAAACBnVFJDAAACFAAAACBiVFJDAAACFAAAACBjaHJtAAACNAAAACRkbW5kAAACWAAAACRkbWRkAAACfAAAACRtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACQAAAAcAEcASQBNAFAAIABiAHUAaQBsAHQALQBpAG4AIABzAFIARwBCbWx1YwAAAAAAAAABAAAADGVuVVMAAAAaAAAAHABQAHUAYgBsAGkAYwAgAEQAbwBtAGEAaQBuAABYWVogAAAAAAAA9tYAAQAAAADTLXNmMzIAAAAAAAEMQgAABd7///MlAAAHkwAA/ZD///uh///9ogAAA9wAAMBuWFlaIAAAAAAAAG+gAAA49QAAA5BYWVogAAAAAAAAJJ8AAA+EAAC2xFhZWiAAAAAAAABilwAAt4cAABjZcGFyYQAAAAAAAwAAAAJmZgAA8qcAAA1ZAAAT0AAACltjaHJtAAAAAAADAAAAAKPXAABUfAAATM0AAJmaAAAmZwAAD1xtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAEcASQBNAFBtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEL/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCABtAKADAREAAhEBAxEB/8QAGwAAAgMBAQEAAAAAAAAAAAAAAwQBAgUGAAf/xAAWAQEBAQAAAAAAAAAAAAAAAAAAAQL/2gAMAwEAAhADEAAAAVbjwyGDDiurJox1a6sIAaTOYszzCRBKsrtPFRoYV+XRNZaj5ohAwqFFjNTjxKxNFhogYGGnI0TZlbHQpJrCJAtWeZKLHPWZyWCStDC1HDZjWlOFCmsLiAzS4pWMnNiiJhB4MpQgydFK3GtLoIUWrHNEx6Gc/WKkHPpYKrRrHQSuxnHqbhscBCtNEgznKQRk4Jmo2umuiOnga0Qw1K/A6FRAgMVEUWMBAgwoUKEXwQYG1fBiieDklTMQZiBi4EsWCFgqlGlseBp4utyqUKJzwUOFJWCCgQdXRigKqEhTaBRl2LGMhlkuVDqyUFzQG4kXqBg8WiRSlhNNBXguSteNmHo5nYBQqNhSAQACQDTss100Jc1Ob0NGtDoqc7pmVIQICKAUChVKv03BozhcBWcKVUvE0kBK1UWBJJ4sGX//xAAiEAACAwACAgMBAQEAAAAAAAAAAQIDERIhBBMQFCIxMhX/2gAIAQEAAQUClHBdmdRQoldZ68Sp0op7ohxTkuNkFZFRw8qhyLKnt3jsuWHEaGia0isFrIohErjhCHXHi64kZHN6105si2z1JS8mPMs8fv0YTiOI49pCEiDwrZWyMEyC6SSIJOUXGUZQSaag7dY0W+Oz67jC6GNxFpxK6xrEitlL0izTCuLk66GiVTH/AL44nFJHkSZf2+By0jIVuCnyIw5HonApck4+VBkZwbqnBi4xl7Ei65JLubipwtitVWR8p7Limcda6OZF/Hjpsr/YqaiVSUlLgQvxQ8ohdpbatU+/bpDEW29eRLTjr6T7NaK5YQaym5Rf2u/tH2T7BG7SN2kb+p2iuFaR8nHbfyGlxcsHPT1jgfwVgpimKw5kWKRGZGeJzTHZj95G49pZd1KWmisZFjjpxz4RvxyIsXQ7NNGjgyO/GaOB/kUWfwicdHEzfldkIaRq6lTxGjDm8hNlVUHGytImv3MiKlyOGG4bpFHq0nTxEu4/kVvTvOev+vjo0okLuA/I0ciTI1YV1s+rzf8AzNc/BUJejDxfH08jw4uuXj+puZ7DlpHPjRsZo5H9F4HcPEihUxieQTk3KFelNnqPei7jcX0cHJYI9mHMcx2DmaIwrXOU/wAKybM5p+HWo2TaPaz2sdrRuqzszBrRoY12l8Z8f//EABQRAQAAAAAAAAAAAAAAAAAAAID/2gAIAQMBAT8BDH//xAAWEQADAAAAAAAAAAAAAAAAAAABUHD/2gAIAQIBAT8BupR//8QAIxAAAQMDBAIDAAAAAAAAAAAAAAERMRAhMAIgQFEiQRJhof/aAAgBAQAGPwLCjljpaIukUvbgsMwqiikZHHPju8kyQWFccYvW+Jv0kZTxajVZxxeqNuYb2LvliXOi9H3PkfVnnjW4F932W5MHVeyyDtkgik0kmk1jFFUX3wP/xAAhEAADAAICAwEBAQEAAAAAAAAAAREhMUFREGGBcZGhsf/aAAgBAQABPyFGRmwKUEeRvAhzkckLYeL0OMuKMGfp7H7iCCcoxpEFQcIdZGQY3ogLPAnssYXZXM4g/of8RqLkZsvp70aSP30WiTgsTZnRFvxtFdiRFsmGXYlr0N/Yil0IckzqAqXjb1i0SjRXY9YhuHk8a2+BV+j3+eOpGdFKVGrgTqVVnehayoxt/DMTVHfWYfLsfLllWZmDbdGsK/R8ETZItCUdyz7vQ8yYQoNp4IDLAx78j9Lp2wLe36G1NsSDZ7wONT4K2W1tD8KCisU4ZIQXezKjTHClf4MkpK9sa4KOCE6ovU6oYnR/4Y9Co9rkcIrFmbdQyJOE7GuwoMHHZ4GxZ4cJtCW1icCVSeGZupj9h99HYLPQiEhSXsn+naZhL6cPAtsN6Qt+jWpK6+DNmvRNQZ2M7OCjbsyZeDowRHX/AOmYdPyjCQ3krgNd5wJ7g7EK8kOFSg6UYCeUYONlR6rGNvBZZ7P0GY2x60jPn+DeiRdkSDeyOwhLwSGbRFwyM1NBBjLAxMvkaIRykU7VHQhmzglZkpKzihO7Q7wZTyxbuyLTNdCiOhTaHmJZK8yHiiSR7UpFL7LvPiY+h5oT2oe59GMvHAvsQptYbTHFlvrJk0PhwZV0Y9GHvRK9CnyakrwthDpoiNghTR+vgaDFsXliMFZgy6hU5g1jqGB3LoJhmtnt8FORs3sbMYjKoixpWYS7FQmQTQ5xwNzYrmiG+XIqbCSNeRUYExm3gQNOf6LNMWWf/9oADAMBAAIAAwAAABBv+yAQQSBZLLvUCCCCHNrvpXQQQAC7+rIBrLv4aVZWyGzQ+5BASEAzYICSTSAkiQQWaCCAQk22AUAQGikCm2kWSEyWUS2QSBYSAYCyCgSDCCRQQyZJKQCCQCAFBJbaCCCmSHoaTQYSEkj/xAAbEQACAwEBAQAAAAAAAAAAAAABEQAgMBBAMf/aAAgBAwEBPxCozMIiuMjRWGZoIosVgoKKKjjyFB4RUdHkFhDRx6KLq6ouqKKKLJRVHgHlG54/CTPsUXP/xAAcEQADAAMBAQEAAAAAAAAAAAAAAREQIDAhMVD/2gAIAQIBAT8Q5MXV9FweH2ZSly+FFmlHvMN+4miZeLKyvEJsuz/cpdr1YtXvRejGXrS4QtS+c5lFYvfpERExRcf/xAAlEAEAAwADAAICAgIDAAAAAAABABEhMUFRYYFxkaHBELHR4fH/2gAIAQEAAT8QT1UQJK2C2F/8iXRwwVL2/iINlMKIZGJspl+QaYI0q7OGXUAOZsUqhpq2Owhwd7HgqDTXNwDeB07g2LfmpqRBLKPP8YZwuR++Hvai8zcrjyQbNUymxx+4bx3KttA0agSlTgl1tTFHcGBCuPpDpSg8w2He2XhbSad2BQC8oyK4Z/EBxFIGTBo2O5CS5WG+pnd/EQAKPxC7KhkwibQqWPpvEsHKXTH6qcnZARvwMfIKHZVfEVUD88xA0FER4LqEe9b+KgrveUD2CCxlw2zLiEAROgFDmZtHxEhThdsGkPvqZB4I/YV3H2qcF8w+1C5hL5YRIXsdb4lKVbCmP1LQlr2c3thmXGs0urO62BBRZoyIFOjY14c1TDwOBMqUoNvORUfylrh8hApRK4eLiGANGyiOFB5DuZbgx+4IhKVkYIERyj5K5P8AmIyyvFXCOGua5+o6KNNGMUz1zCUDo3ZAJd1ZKU0Dc7gctPVn3Cw0kGmjuOgmwO6ii6vWyqCretl/Vv8AVywfZXcjwg4SPXcYgg3cXlqVZ/uChcpgvYHFNzYatVcVKLXd1G6Rs56gp3gl9R9SDi24pHB/USocBtQMcFQWuOGaSw/a5ky66gV6o3RKMwk8URAhtfMKNFGYGrWUKtvLMIC7YxCTw8/Ebib9lp/aFerg0ZqGItHyK0Dqupblrz2QBlMChzhdZ45MbY+89jMNQvljbaJ08x3QB1EF9CHWNPiKojDmnIvsEHiq/MudCMcTsZNwIDlvENFt9eMQFA6tURfXfMvAcPmbQtfuMCmptivmEVgAoqKn9Eazb7GcqLN4vyH3DiuYILMvLjVFZ1UQRbIUYV8k4y7fZXYPkRHWcTeLfmU63g6hsJ9xbu3U4kMeReoLpb6RFbqKVuMEGpBaZ5cuULQRnLLLJorjI5tveAgKUVN2jTWPAuGDT5REaH3Fqi0xqUYkfiVgKfI6Ka/1KXucNQtAOx0xS0Cw+4+g5YJMCobk3BYKgfSKKgPzK8XTP7wQ2Fw6aDkI0v4BERw8qMgtvmGBR/uU3KsLg0QEKuOhu11KhR98gVMajt3cPqBYL4XGFba5bOmVGdykrsfI3bXRUG6n4gaKJdpil6HuCgCzz5AEeUXUKsZd971/3EJXaL6hisH1AApY6Yg1GtqAFKDyQptB5MiEpp+YiryleT/Meh3EQqiKm59q8cxyQpxfeZD5YfHFey0lsdSKVU1RBVnwqXOpDiAAPgS5PmQit017E14dkMLafJe8pEvbfmEdkt0JmHbvUxJrBC1t8g8TQsujANqUwag+HJT3ksJRVWMDBwIkIKd3EAvH5nIOvZav3QlyPRFFXb6qIWF+wzGJ5COoVF08gJrH2IUAF+0IuWnbHUcT/9k="
-      );
-    }
-
-    if (
-      tagName === "vaadin-radio-group" ||
-      tagName === "vaadin-checkbox-group"
-    ) {
-      if (rectRatio(rect) < 1) {
-        el.setAttribute("theme", "vertical");
-      }
-    }
+    styles = styles + "margin: 1rem;";
 
     if (rect.children) {
       if (isVerticalLayout(rect)) {
@@ -847,48 +847,113 @@ const createAndAppendChildElementsToDOM = (parent, rects, image) => {
       }
     }
 
-    /*
-    if (tagName === "vaadin-vertical-layout") {
-      rect.children.sort((rectA, rectB) => {
-        return rectA.top - rectB.top;
-      });
+    // Use brute to determine flexbox properties for div
+    if (tagName === "div" && rect.children) {
+      styles = styles + brute(rect.children, rect);
     }
 
-    if (tagName === "vaadin-horizontal-layout") {
-      rect.children.sort((rectA, rectB) => {
-        return rectA.left - rectB.left;
-      });
+    // Temporary hardcodings
+    if (tagName === "vaadin-button") {
+      rect.text = getWord();
+      setAttribute("theme", "primary");
     }
-*/
-    if (tagName === "vaadin-split-layout") {
-      // remove drag handle rect
-      const smallest = getSmallestRect(rect.children);
-      rect.children = rect.children.filter(rect => rect !== smallest);
-      // determine orientation
-      const child = rect.children[0];
-      if (
-        pointInsideRect(child, smallest.left, smallest.top) !==
-        pointInsideRect(child, smallest.left, smallest.bottom)
-      ) {
-        el.setAttribute("orientation", "vertical");
+
+    if (tagName === "span") {
+      rect.text = getWord();
+    }
+
+    if (tagName === "img") {
+      setAttribute(
+        "src",
+        "data:image/jpeg;base64,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"
+      );
+    }
+
+    if (tagName === "vaadin-text-field") {
+      setAttribute("label", getWord());
+    }
+    if (tagName === "vaadin-tabs") {
+      rect.text = "Tab 1|Tab 2|Tab 3";
+    }
+
+    if (tagName === "vaadin-combo-box") {
+      setAttribute(
+        "items",
+        '["item 1", "item 2", "item 3", "item 4", "item 5"]'
+      );
+    }
+
+    if (rect.text) {
+      if (rect.text.includes("|")) {
+        rect.text.split("|").forEach(str => {
+          children.push("vaadin-tab", "(", "textContent", str, "=", ")");
+        });
+      } else {
+        setAttribute("textContent", rect.text);
       }
     }
 
-    // Use brute to determine flexbox properties for div
-    if (tagName === "div") {
-      Object.assign(el.style, brute(rect.children, rect));
+    if (styles.length > 0) {
+      setAttribute("style", styles);
+    }
+    if (children.length > 0) {
+      tree = tree.concat(children);
     }
 
-    if (tagName === "vaadin-button") {
-      el.textContent = getWord();
-    }
-
-    parent.appendChild(el);
     if (rect.children) {
-      createAndAppendChildElementsToDOM(el, rect.children);
+      tree = tree.concat(createAndAppendChildElements(rect.children));
+    }
+    tree.push(")");
+  });
+  return tree;
+};
+
+export const modelToDOM = (code, target) => {
+  const stack = [];
+  const tree = [];
+  let current = target;
+  code.forEach((str, index) => {
+    const trimmed = str.trim();
+    switch (trimmed) {
+      case "(": {
+        const old = current;
+        tree.push(current);
+        const tag = stack.pop();
+        current = document.createElement(tag);
+        old.appendChild(current);
+        break;
+      }
+      case ")": {
+        current = tree.pop();
+        break;
+      }
+      case "=": {
+        const tos = stack.pop();
+        const nos = stack.pop();
+        if (nos in current) {
+          try {
+            const json = JSON.parse(tos);
+            current[nos] = json;
+          } catch (e) {
+            current[nos] = tos;
+            current.setAttribute(nos, tos);
+          }
+        } else {
+          current.setAttribute(nos, tos);
+        }
+
+        break;
+      }
+      default: {
+        stack.push(trimmed);
+      }
     }
   });
+  return current;
 };
+
+let designAtir = [];
+let rectangleSynthesisRunning = true;
 
 const enterSketchMode = (targetEl, designCallback) => {
   rects = [];
@@ -900,15 +965,17 @@ const enterSketchMode = (targetEl, designCallback) => {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     ctx.drawImage(video, 0, 0);
-    const imageData = ctx.getImageData(0, 0, 640, 480);
+    const imageData = ctx.getImageData(0, 0, 640, 640);
     let [xs, ys, prepared] = prepare(imageData.data);
-    draw_image(prepared, document.getElementById("result-image"));
+    //draw_image(prepared, document.getElementById("result-image"));
     const newRects = collect_rects(xs, ys, prepared);
     rects = filter_rects(newRects, rects);
     image = prepared;
     draw_rects(rects);
     deleteRectChildren(rects);
-    window.requestAnimationFrame(update_view);
+    if (rectangleSynthesisRunning) {
+      window.requestAnimationFrame(update_view);
+    }
   };
 
   window.requestAnimationFrame(update_view);
@@ -956,19 +1023,34 @@ navigator.mediaDevices.enumerateDevices()
   });
 
   $("#cam-canvas").onclick = () => {
+    rectangleSynthesisRunning = true;
     rects = [];
+    window.requestAnimationFrame(update_view);
   };
 
   $("#reset").onclick = () => {
+    rectangleSynthesisRunning = false;
     $("#content").innerHTML = "";
 
     deleteRectChildren(rects);
     let roots = createTreeFromRects(rects);
-    const design = createAndAppendChildElementsToDOM(
-      $("#content"),
-      roots,
-      image
-    );
+    designAtir = createAndAppendChildElements(roots, image);
+    modelToDOM(designAtir, $("#content"));
+  };
+
+  $("#share-button").onclick = () => {
+    const project = {
+      designs: { napkin: { tree: designAtir, css: "" } },
+      settings: { packageName: "vaadin.napkin", exportFormat: "Java" }
+    };
+
+    if (navigator.share) {
+      var f = new File([JSON.stringify(project)], "napkin_design.json.txt", {
+        type: "text/plain"
+      });
+      const shareData = { title: "Napkin design", files: [f] };
+      navigator.share(shareData);
+    }
   };
 };
 
