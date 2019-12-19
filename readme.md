@@ -1,6 +1,6 @@
 # Napkin
 
-Napkin is a tool for turning UI sketches drawn on napkins, whiteboards, pieces of papers and many other things
+Napkin is a tool for turning UI sketches drawn on napkins, whiteboards, pieces of paper and many other things
 into UI layouts.
 
 ## How to use it
