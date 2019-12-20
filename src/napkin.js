@@ -1026,13 +1026,18 @@ const enterSketchMode = (targetEl, designCallback) => {
         label.for = device.id;
         label.textContent = device.label;
         deviceList.appendChild(label);
+
         if (!firstDevice) {
           firstDevice = input;
         }
       }
     });
-    firstDevice.checked = true;
-    chooseDevice(firstDevice.value);
+    if (firstDevice) {
+      firstDevice.checked = true;
+      chooseDevice(firstDevice.value);
+    } else {
+      deviceList.textContent = "No cameras found.";
+    }
   });
 
   $("#cam-canvas").onclick = () => {
