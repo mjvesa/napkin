@@ -15,10 +15,12 @@ into UI layouts.
 
 ## What is supported, how to draw it
 
-- dark color on white background. The white background shold encompass the entire image.
--
-
-Most of what is supported is in this sketch:
+The sketch should be drawn in dark color on white background. The white
+background should encompass the entire image. Check the component example
+image for all components that are supported. Also, the syntax definition below
+gives a more formal treatment. Note that even though the syntax mentions
+other layouts, only vertical and horizontal layouts are supported right now
+via flexbox.
 
 [Components example](image/components_example.png)
 [Visual BNF definition of syntax](image/napkin_vbnf_syntax.png)
