@@ -15,6 +15,10 @@ into UI layouts.
 
 ## What is supported, how to draw it
 
+- dark color on white background. The white background shold encompass the entire image.
+-
+
 Most of what is supported is in this sketch:
 
 [Components example](image/components_example.png)
+[Visual BNF definition of syntax](image/napkin_vbnf_syntax.png)
