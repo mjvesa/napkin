@@ -3,6 +3,8 @@
 Napkin is a tool for turning UI sketches drawn on napkins, whiteboards, pieces of paper and many other things
 into UI layouts.
 
+Check out this video to see how it works:
+
 [![Example of how Napking works in practice](https://img.youtube.com/vi/cYXe-xgM-yw/0.jpg)](https://www.youtube.com/watch?v=cYXe-xgM-yw)
 
 ## How to use it
